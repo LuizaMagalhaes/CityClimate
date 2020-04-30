@@ -1,114 +1,87 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+import React, { useState } from 'react';
+import { StyleSheet, TextInput, View, Button, FlatList, Keyboard, Text } from 'react-native';
+import CityItem from './Components/CityItem';
 
-import React from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-} from 'react-native';
+export default function App() {
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  const endPoint = "https://api.openweathermap.org/data/2.5/weather?lang=pt&units=metric&q=";
+  const apiKey = 'd1e6fe98456f3898b3436b22dd0e67a1';
 
-const App: () => React$Node = () => {
+  const [city, setCity] = useState('');
+  const [forecasts, setForecasts] = useState([]);
+  const [error, setError] = useState(false)
+
+  const catchCity = (city) => {
+    setCity(city);
+  }
+
+  const getForecasts = () => {
+    setForecasts([]);
+
+    const target = endPoint + city + "&appid=" + apiKey;
+    fetch(target)
+      .then((dados) => dados.json())
+      .then((dados) => {
+        if (dados.cod && dados.cod == 200) {
+          setError(false);
+        } else {
+          setError(true);
+        }
+        setForecasts([dados])
+        Keyboard.dismiss()
+      });
+  }
+
   return (
-    <>
-      <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </>
+    <View style={styles.container}>
+      <View style={styles.entrada}>
+        <TextInput
+          style={styles.nomeCity}
+          placeholder="Pesquise uma cidade pelo nome"
+          value={city}
+          onChangeText={catchCity}
+        />
+        <Button title="Ok" onPress={getForecasts
+        } />
+      </View>
+      {error ?
+        <Text style={styles.errorMessage}>Cidade não encontrada</Text>
+        :
+        <FlatList
+          data={forecasts}
+          renderItem={
+            forecast => (
+              <CityItem forecast={forecast} />
+            )
+          }
+        />
+
+      }
+    </View>
   );
-};
+
+}
 
 const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
+  container: {
+    padding: 40,
+    flexDirection: 'column',
+    flex: 1,
+    backgroundColor: '#fff'
   },
-  engine: {
-    position: 'absolute',
-    right: 0,
+  nomeCity: {
+    padding: 10,
+    borderBottomColor: '#38323c',
+    borderBottomWidth: 2,
+    textAlign: 'left',
+    flexGrow: 0.9
   },
-  body: {
-    backgroundColor: Colors.white,
+  entrada: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8
   },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
+  errorMessage: {
+    color: 'red'
+  }
 });
-
-export default App;
